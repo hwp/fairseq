@@ -11,6 +11,7 @@ import argparse
 import glob
 import os
 import random
+import itertools
 
 import soundfile
 
@@ -48,7 +49,8 @@ def main(args):
     assert args.valid_percent >= 0 and args.valid_percent <= 1.0
 
     dir_path = os.path.realpath(args.root)
-    search_path = os.path.join(dir_path, "**/*." + args.ext)
+    search_paths = [os.path.join(dir_path, f'**/*.{e}')
+                                for e in args.ext.split(',')]
     rand = random.Random(args.seed)
 
     with open(os.path.join(args.dest, "train.tsv"), "w") as train_f, open(
@@ -57,7 +59,8 @@ def main(args):
         print(dir_path, file=train_f)
         print(dir_path, file=valid_f)
 
-        for fname in glob.iglob(search_path, recursive=True):
+        for fname in itertools.chain(
+                *[glob.iglob(sp, recursive=True) for sp in search_paths]):
             file_path = os.path.realpath(fname)
 
             if args.path_must_contain and args.path_must_contain not in file_path:
